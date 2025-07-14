@@ -104,21 +104,25 @@
   let alumniData = [];
 
   // Manual mapping from messy CSV values to clean field categories
-  const fieldMapping = {
-    "Education": ["Education", "Education & Youth Development", "Education & Economic Development", "Youth Development"],
-    "Health": ["Health", "Healthcare", "Health & Human Services", "Health & Legal Services", "Mental Health", "Community Health"],
-    "Housing": ["Housing", "Housing & Community Development", "Housing and Community Development"],
-    "Advocacy & Policy": ["Advocacy", "Public Policy & Advocacy", "Environmental Justice"],
-    "Arts & Culture": ["Arts", "Arts & Culture"],
-    "Community Development": ["Community", "Economic Development", "Economic & Community Development", "Family Support", "Leadership", "Workforce Development", "Workforce & Economic Development"],
-    "Environment": ["Environment", "Environment & Conservation"],
-    "Faith-Based": ["Faith-Based", "Faith Based"],
-    "Philanthropy": ["Philanthropy", "Philanthropy & Capacity Building"],
-    "Consulting & Research": ["Consulting", "Nonprofit Consulting", "Research and Evaluation", "Research/Technology"],
-    "Government": ["Government"],
-    "Social Services": ["Human Services", "Social Services", "Community Recreation"],
-    "Veterans": ["Veteran Services"]
-  };
+const fieldMapping = {
+  "Education": ["Education", "Education & Economic Development"],
+  "Youth Development": ["Youth Development", "Education & Youth Development"],
+  "Health": ["Health", "Healthcare", "Community Health", "Mental Health"],
+  "Health & Human Services": ["Health & Human Services"],
+  "Health & Legal Services": ["Health & Legal Services"],
+  "Housing": ["Housing", "Housing & Community Development", "Housing and Community Development"],
+  "Advocacy & Policy": ["Advocacy", "Public Policy & Advocacy", "Environmental Justice"],
+  "Arts & Culture": ["Arts", "Arts & Culture"],
+  "Community Development": ["Community", "Economic Development", "Economic & Community Development", "Family Support", "Leadership"],
+  "Workforce Development": ["Workforce Development", "Workforce & Economic Development"],
+  "Environment": ["Environment", "Environment & Conservation"],
+  "Faith-Based": ["Faith-Based", "Faith Based"],
+  "Philanthropy": ["Philanthropy", "Philanthropy & Capacity Building"],
+  "Consulting & Research": ["Consulting", "Nonprofit Consulting", "Research and Evaluation", "Research/Technology"],
+  "Government": ["Government"],
+  "Social Services": ["Human Services", "Social Services", "Community Recreation"],
+  "Veterans": ["Veteran Services"]
+};
 
   function getSimplifiedField(rawValue) {
     const val = (rawValue || "").trim();
