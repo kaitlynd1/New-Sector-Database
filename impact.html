@@ -1,265 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>NSA Alumni Impact</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f9fafa;
       color: #14455C;
-      padding: 0;
-      margin: 0;
+      padding-top: 80px;
     }
 
     .navbar {
       background-color: #14455C;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       padding: 15px 40px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    .navbar-logo {
+    .navbar-brand {
       color: white;
-      font-size: 20px;
       font-weight: bold;
       letter-spacing: 0.5px;
     }
 
-    .navbar-links {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-    }
-
-    .navbar-links li {
+    .nav-link {
+      color: white !important;
       margin-left: 30px;
     }
 
-    .navbar-links a {
-      color: white;
-      text-decoration: none;
-      font-size: 16px;
-      position: relative;
-      padding-bottom: 5px;
-    }
-
-    .navbar-links a::after {
-      content: "";
-      display: block;
-      width: 0%;
-      height: 2px;
-      background: #3CBAC8;
-      transition: width 0.3s;
-      position: absolute;
-      bottom: 0;
-      left: 0;
-    }
-
-    .navbar-links a:hover::after {
-      width: 100%;
-    }
-
-    .tabs {
-      display: flex;
-      justify-content: center;
-      background-color: #EAF3F6;
+    .nav-link.active {
       border-bottom: 2px solid #3CBAC8;
     }
 
-    .tabs button {
-      padding: 14px 25px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      font-size: 16px;
-      color: #14455C;
-      font-weight: bold;
-    }
-
-    .tabs button.active {
-      border-bottom: 3px solid #3CBAC8;
-    }
-
     .tab-content {
-      display: none;
       padding: 30px;
     }
 
-    .tab-content.active {
-      display: block;
-    }
-
     canvas {
+      max-width: 800px;
+      max-height: 600px;
+      margin: auto;
       background: white;
       border: 2px solid #D4DFE6;
       border-radius: 10px;
-      margin: 30px auto;
       display: block;
-      max-width: 800px;
     }
   </style>
 </head>
 
 <body>
-  <nav class="navbar">
-    <div class="navbar-logo">New Sector Alliance</div>
-    <ul class="navbar-links">
-      <li><a href="index.html">Alumni Directory</a></li>
-      <li><a href="impact.html">Impact Dashboard</a></li>
+
+<nav class="navbar fixed-top navbar-expand-lg">
+  <a class="navbar-brand" href="#">New Sector Alliance</a>
+  <div class="collapse navbar-collapse">
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item"><a class="nav-link" href="index.html">Alumni Directory</a></li>
+      <li class="nav-item"><a class="nav-link active" href="impact.html">Impact Dashboard</a></li>
     </ul>
-  </nav>
-
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('issueArea')">Issue Area</button>
-    <button class="tab-btn" onclick="switchTab('hostOrg')">Host Organizations</button>
-    <button class="tab-btn" onclick="switchTab('gender')">Gender</button>
-    <button class="tab-btn" onclick="switchTab('race')">Race & Ethnicity</button>
   </div>
+</nav>
 
-  <div id="issueArea" class="tab-content active">
-    <canvas id="fieldChart"></canvas>
+<div class="container">
+  <ul class="nav nav-tabs" id="chartTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="field-tab" data-bs-toggle="tab" data-bs-target="#field" type="button" role="tab">By Issue Area</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="org-tab" data-bs-toggle="tab" data-bs-target="#org" type="button" role="tab">Top Host Orgs</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="gender-tab" data-bs-toggle="tab" data-bs-target="#gender" type="button" role="tab">Gender</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="race-tab" data-bs-toggle="tab" data-bs-target="#race" type="button" role="tab">Race/Ethnicity</button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="field" role="tabpanel">
+      <canvas id="fieldChart"></canvas>
+    </div>
+    <div class="tab-pane fade" id="org" role="tabpanel">
+      <canvas id="orgChart"></canvas>
+    </div>
+    <div class="tab-pane fade" id="gender" role="tabpanel">
+      <canvas id="genderChart"></canvas>
+    </div>
+    <div class="tab-pane fade" id="race" role="tabpanel">
+      <canvas id="raceChart"></canvas>
+    </div>
   </div>
+</div>
 
-  <div id="hostOrg" class="tab-content">
-    <canvas id="orgChart"></canvas>
-  </div>
+<script>
+  const fieldMapping = {
+    "Education": ["Education", "Education & Economic Development"],
+    "Youth Development": ["Youth Development", "Education & Youth Development"],
+    "Health": ["Health", "Healthcare", "Community Health", "Mental Health"],
+    "Health & Human Services": ["Health & Human Services"],
+    "Health & Legal Services": ["Health & Legal Services"],
+    "Housing": ["Housing", "Housing & Community Development", "Housing and Community Development"],
+    "Advocacy & Policy": ["Advocacy", "Public Policy & Advocacy", "Environmental Justice"],
+    "Arts & Culture": ["Arts", "Arts & Culture"],
+    "Community Development": ["Community", "Economic Development", "Economic & Community Development", "Family Support", "Leadership"],
+    "Workforce Development": ["Workforce Development", "Workforce & Economic Development"],
+    "Environment": ["Environment", "Environment & Conservation"],
+    "Faith-Based": ["Faith-Based", "Faith Based"],
+    "Philanthropy": ["Philanthropy", "Philanthropy & Capacity Building"],
+    "Consulting & Research": ["Consulting", "Nonprofit Consulting", "Research and Evaluation", "Research/Technology"],
+    "Government": ["Government"],
+    "Social Services": ["Human Services", "Social Services", "Community Recreation"],
+    "Veterans": ["Veteran Services"]
+  };
 
-  <div id="gender" class="tab-content">
-    <canvas id="genderChart"></canvas>
-  </div>
-
-  <div id="race" class="tab-content">
-    <canvas id="raceChart"></canvas>
-  </div>
-
-  <script>
-    const fieldMapping = {
-      "Education": ["Education", "Education & Economic Development"],
-      "Youth Development": ["Youth Development", "Education & Youth Development"],
-      "Health": ["Health", "Healthcare", "Community Health", "Mental Health"],
-      "Health & Human Services": ["Health & Human Services"],
-      "Health & Legal Services": ["Health & Legal Services"],
-      "Housing": ["Housing", "Housing & Community Development", "Housing and Community Development"],
-      "Advocacy & Policy": ["Advocacy", "Public Policy & Advocacy", "Environmental Justice"],
-      "Arts & Culture": ["Arts", "Arts & Culture"],
-      "Community Development": ["Community", "Economic Development", "Economic & Community Development", "Family Support", "Leadership"],
-      "Workforce Development": ["Workforce Development", "Workforce & Economic Development"],
-      "Environment": ["Environment", "Environment & Conservation"],
-      "Faith-Based": ["Faith-Based", "Faith Based"],
-      "Philanthropy": ["Philanthropy", "Philanthropy & Capacity Building"],
-      "Consulting & Research": ["Consulting", "Nonprofit Consulting", "Research and Evaluation", "Research/Technology"],
-      "Government": ["Government"],
-      "Social Services": ["Human Services", "Social Services", "Community Recreation"],
-      "Veterans": ["Veteran Services"]
-    };
-
-    function getSimplifiedField(rawValue) {
-      const val = (rawValue || "").trim();
-      for (const [clean, rawList] of Object.entries(fieldMapping)) {
-        if (rawList.includes(val)) return clean;
-      }
-      return "Other";
+  function getSimplifiedField(rawValue) {
+    const val = (rawValue || "").trim();
+    for (const [clean, rawList] of Object.entries(fieldMapping)) {
+      if (rawList.includes(val)) return clean;
     }
+    return "Other";
+  }
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
-    }
+  fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
+    .then(res => res.text())
+    .then(csv => {
+      const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true });
+      const data = parsed.data;
 
-    fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
-      .then(response => response.text())
-      .then(csv => {
-        const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true });
-        const data = parsed.data;
+      // ISSUE AREA
+      const fieldCounts = {};
+      const orgCounts = {};
 
-        // Issue Area Pie
-        const fieldCounts = {};
-        const orgCounts = {};
-        data.forEach(row => {
-          const field = getSimplifiedField(row["Field of NSA Host Organization"]);
-          const org = row["Organization"] || "Unknown";
+      data.forEach(row => {
+        const field = getSimplifiedField(row["Field of NSA Host Organization"]);
+        fieldCounts[field] = (fieldCounts[field] || 0) + 1;
 
-          fieldCounts[field] = (fieldCounts[field] || 0) + 1;
-          orgCounts[org] = (orgCounts[org] || 0) + 1;
-        });
-
-        const fieldChart = new Chart(document.getElementById("fieldChart"), {
-          type: 'pie',
-          data: {
-            labels: Object.keys(fieldCounts),
-            datasets: [{
-              data: Object.values(fieldCounts),
-              backgroundColor: Object.keys(fieldCounts).map(() => '#' + Math.floor(Math.random()*16777215).toString(16))
-            }]
-          },
-          options: {
-            plugins: {
-              legend: { position: 'right' }
-            }
-          }
-        });
-
-        const sortedOrgs = Object.entries(orgCounts).sort((a,b) => b[1] - a[1]).slice(0,10);
-        const orgChart = new Chart(document.getElementById("orgChart"), {
-          type: 'bar',
-          data: {
-            labels: sortedOrgs.map(e => e[0]),
-            datasets: [{
-              label: 'Alumni Count',
-              data: sortedOrgs.map(e => e[1]),
-              backgroundColor: '#3CBAC8'
-            }]
-          },
-          options: {
-            indexAxis: 'y',
-            scales: {
-              x: { beginAtZero: true }
-            }
-          }
-        });
-
-        // Static Gender Chart
-        new Chart(document.getElementById("genderChart"), {
-          type: 'doughnut',
-          data: {
-            labels: ["Women", "Men", "Non-Binary"],
-            datasets: [{
-              data: [65, 25, 10],
-              backgroundColor: ["#FFB6C1", "#87CEFA", "#DDA0DD"]
-            }]
-          },
-          options: {
-            plugins: {
-              legend: { position: 'right' }
-            }
-          }
-        });
-
-        // Static Race Chart
-        new Chart(document.getElementById("raceChart"), {
-          type: 'doughnut',
-          data: {
-            labels: ["Multi-racial", "Black/African-American", "Asian", "White/European Descent"],
-            datasets: [{
-              data: [33, 33, 14, 20],
-              backgroundColor: ["#FFDEAD", "#6B8E23", "#40E0D0", "#A9A9A9"]
-            }]
-          },
-          options: {
-            plugins: {
-              legend: { position: 'right' }
-            }
-          }
-        });
+        const org = row["Organization"];
+        if (org) orgCounts[org] = (orgCounts[org] || 0) + 1;
       });
-  </script>
+
+      const fieldLabels = Object.keys(fieldCounts);
+      const fieldValues = Object.values(fieldCounts);
+      const fieldColors = fieldLabels.map(() => '#' + Math.floor(Math.random() * 16777215).toString(16));
+
+      new Chart(document.getElementById("fieldChart"), {
+        type: "pie",
+        data: {
+          labels: fieldLabels,
+          datasets: [{
+            data: fieldValues,
+            backgroundColor: fieldColors
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: "right" }
+          }
+        }
+      });
+
+      // TOP ORGS
+      const sortedOrgs = Object.entries(orgCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      new Chart(document.getElementById("orgChart"), {
+        type: "bar",
+        data: {
+          labels: sortedOrgs.map(o => o[0]),
+          datasets: [{
+            label: "# of Alumni",
+            data: sortedOrgs.map(o => o[1]),
+            backgroundColor: "#3CBAC8"
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { beginAtZero: true }
+          }
+        }
+      });
+
+      // GENDER
+      new Chart(document.getElementById("genderChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Women", "Men", "Non-binary"],
+          datasets: [{
+            data: [65, 25, 10],
+            backgroundColor: ["#3CBAC8", "#14455C", "#AAC3A5"]
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: "right" }
+          }
+        }
+      });
+
+      // RACE/ETHNICITY
+      new Chart(document.getElementById("raceChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Multi-racial", "Black or African-American", "Asian", "White / European Descent"],
+          datasets: [{
+            data: [33, 33, 14, 20],
+            backgroundColor: ["#14455C", "#3CBAC8", "#AAC3A5", "#E0E0E0"]
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: "right" }
+          }
+        }
+      });
+    });
+</script>
+
 </body>
 </html>
