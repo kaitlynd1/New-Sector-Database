@@ -3,61 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <title>NSA Alumni Directory</title>
-<style>
-  body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f9fafa;
-    padding: 30px;
-    color: #14455C;
-  }
 
-  h2 {
-    color: #165C7D;
-    font-size: 28px;
-    border-bottom: 2px solid #3CBAC8;
-    padding-bottom: 5px;
-  }
+  <!-- PapaParse for robust CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
 
-  input {
-    width: 320px;
-    padding: 10px;
-    font-size: 14px;
-    margin-bottom: 25px;
-    border: 2px solid #AAC3A5;
-    border-radius: 5px;
-  }
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f9fafa;
+      padding: 30px;
+      color: #14455C;
+    }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
+    h2 {
+      color: #165C7D;
+      font-size: 28px;
+      border-bottom: 2px solid #3CBAC8;
+      padding-bottom: 5px;
+    }
 
-  th {
-    background-color: #3CBAC8;
-    color: white;
-    padding: 10px;
-    text-align: left;
-  }
+    .filters {
+      margin-bottom: 20px;
+    }
 
-  td {
-    padding: 10px;
-    border-bottom: 1px solid #D4DFE6;
-  }
+    input, select {
+      width: 320px;
+      padding: 10px;
+      font-size: 14px;
+      margin-right: 20px;
+      margin-bottom: 15px;
+      border: 2px solid #AAC3A5;
+      border-radius: 5px;
+    }
 
-  tr:nth-child(even) {
-    background-color: #f2f9fb;
-  }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
 
-  tr:hover {
-    background-color: #e6f4f7;
-  }
-</style>
+    th {
+      background-color: #3CBAC8;
+      color: white;
+      padding: 10px;
+      text-align: left;
+    }
 
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #D4DFE6;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f9fb;
+    }
+
+    tr:hover {
+      background-color: #e6f4f7;
+    }
+  </style>
 </head>
 <body>
   <h2>NSA Alumni Directory</h2>
-  <input type="text" id="searchBox" placeholder="Search by name, cohort, organization..." />
+
+  <div class="filters">
+    <input type="text" id="searchBox" placeholder="Search by name, email, org..." />
+    <select id="cohortFilter">
+      <option value="">All Cohorts</option>
+    </select>
+  </div>
+
   <table>
     <thead>
       <tr>
@@ -74,6 +89,7 @@
 
   <script>
     const searchBox = document.getElementById("searchBox");
+    const cohortFilter = document.getElementById("cohortFilter");
     const results = document.getElementById("results");
     let alumniData = [];
 
@@ -95,31 +111,39 @@
 
     function filter() {
       const query = searchBox.value.toLowerCase();
-      const filtered = alumniData.filter(row =>
-        Object.values(row).some(val =>
+      const cohort = cohortFilter.value;
+      const filtered = alumniData.filter(row => {
+        const matchesSearch = Object.values(row).some(val =>
           (val || '').toLowerCase().includes(query)
-        )
-      );
+        );
+        const matchesCohort = !cohort || row["Cohort"] === cohort;
+        return matchesSearch && matchesCohort;
+      });
       render(filtered);
     }
 
     searchBox.addEventListener("input", filter);
+    cohortFilter.addEventListener("change", filter);
 
     fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
       .then(response => response.text())
-      .then(text => {
-        const rows = text.trim().split('\n').map(r => r.split(','));
-        const headers = rows[0];
-        alumniData = rows.slice(1).map(row => {
-          const obj = {};
-          headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim() || "");
-          return obj;
+      .then(csv => {
+        const parsed = Papa.parse(csv, {
+          header: true,
+          skipEmptyLines: true
         });
+        alumniData = parsed.data;
+
+        // Populate cohort dropdown
+        const cohorts = [...new Set(alumniData.map(r => r["Cohort"]).filter(Boolean))].sort();
+        cohorts.forEach(cohort => {
+          const option = document.createElement("option");
+          option.value = cohort;
+          option.textContent = cohort;
+          cohortFilter.appendChild(option);
+        });
+
         render(alumniData);
-      })
-      .catch(error => {
-        console.error("Failed to fetch data:", error);
-        results.innerHTML = "<tr><td colspan='6'>Error loading data</td></tr>";
       });
   </script>
 </body>
