@@ -1,113 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>NSA Alumni Impact</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js">
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 30px;
       background: #f9fafa;
       color: #14455C;
+      padding: 0;
+      margin: 0;
     }
 
-    h2 {
-      color: #165C7D;
-      font-size: 28px;
-      border-bottom: 2px solid #3CBAC8;
+    .navbar {
+      background-color: #14455C;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 40px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .navbar-logo {
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .navbar-links {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+    }
+
+    .navbar-links li {
+      margin-left: 30px;
+    }
+
+    .navbar-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      position: relative;
       padding-bottom: 5px;
     }
 
-    #chart-container {
-      width: 80%;
-      margin: 40px auto;
+    .navbar-links a::after {
+      content: "";
+      display: block;
+      width: 0%;
+      height: 2px;
+      background: #3CBAC8;
+      transition: width 0.3s;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+
+    .navbar-links a:hover::after {
+      width: 100%;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      background-color: #EAF3F6;
+      border-bottom: 2px solid #3CBAC8;
+    }
+
+    .tabs button {
+      padding: 14px 25px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #14455C;
+      font-weight: bold;
+    }
+
+    .tabs button.active {
+      border-bottom: 3px solid #3CBAC8;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 30px;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     canvas {
       background: white;
       border: 2px solid #D4DFE6;
       border-radius: 10px;
+      margin: 30px auto;
+      display: block;
+      max-width: 800px;
     }
-   .navbar {
-  background-color: #14455C;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 40px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.navbar-logo {
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-}
-
-.navbar-links {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-}
-
-.navbar-links li {
-  margin-left: 30px;
-}
-
-.navbar-links a {
-  color: white;
-  text-decoration: none;
-  font-size: 16px;
-  position: relative;
-  padding-bottom: 5px;
-}
-
-.navbar-links a::after {
-  content: "";
-  display: block;
-  width: 0%;
-  height: 2px;
-  background: #3CBAC8;
-  transition: width 0.3s;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-}
-
-.navbar-links a:hover::after {
-  width: 100%;
-}
-
   </style>
-
-
- <nav class="navbar">
-  <div class="navbar-logo">New Sector Alliance</div>
-  <ul class="navbar-links">
-    <li><a href="index.html">Alumni Directory</a></li>
-    <li><a href="impact.html">Impact Dashboard</a></li>
-  </ul>
-</nav>
-
-
-  
 </head>
 
-  
 <body>
+  <nav class="navbar">
+    <div class="navbar-logo">New Sector Alliance</div>
+    <ul class="navbar-links">
+      <li><a href="index.html">Alumni Directory</a></li>
+      <li><a href="impact.html">Impact Dashboard</a></li>
+    </ul>
+  </nav>
 
-  <h2>NSA Alumni by Issue Area</h2>
-  <div id="chart-container">
-    <canvas id="fieldChart" width="800" height="800"></canvas>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('issueArea')">Issue Area</button>
+    <button class="tab-btn" onclick="switchTab('hostOrg')">Host Organizations</button>
+    <button class="tab-btn" onclick="switchTab('gender')">Gender</button>
+    <button class="tab-btn" onclick="switchTab('race')">Race & Ethnicity</button>
   </div>
 
-  <h3 style="margin-top: 40px;">Top 10 Host Organizations by Alumni Count</h3>
-<canvas id="orgChart" width="400" height="300"></canvas>
- 
+  <div id="issueArea" class="tab-content active">
+    <canvas id="fieldChart"></canvas>
+  </div>
+
+  <div id="hostOrg" class="tab-content">
+    <canvas id="orgChart"></canvas>
+  </div>
+
+  <div id="gender" class="tab-content">
+    <canvas id="genderChart"></canvas>
+  </div>
+
+  <div id="race" class="tab-content">
+    <canvas id="raceChart"></canvas>
+  </div>
+
   <script>
     const fieldMapping = {
       "Education": ["Education", "Education & Economic Development"],
@@ -137,55 +167,95 @@
       return "Other";
     }
 
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+    }
+
     fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
       .then(response => response.text())
       .then(csv => {
-        const parsed = Papa.parse(csv, {
-          header: true,
-          skipEmptyLines: true
-        });
-
+        const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true });
         const data = parsed.data;
-        const fieldCounts = {};
 
+        // Issue Area Pie
+        const fieldCounts = {};
+        const orgCounts = {};
         data.forEach(row => {
           const field = getSimplifiedField(row["Field of NSA Host Organization"]);
-          if (!fieldCounts[field]) fieldCounts[field] = 0;
-          fieldCounts[field]++;
+          const org = row["Organization"] || "Unknown";
+
+          fieldCounts[field] = (fieldCounts[field] || 0) + 1;
+          orgCounts[org] = (orgCounts[org] || 0) + 1;
         });
 
-        const labels = Object.keys(fieldCounts);
-        const values = Object.values(fieldCounts);
-
-        const colors = labels.map(() => '#' + Math.floor(Math.random()*16777215).toString(16));
-
-        const ctx = document.getElementById("fieldChart").getContext("2d");
-        new Chart(ctx, {
+        const fieldChart = new Chart(document.getElementById("fieldChart"), {
           type: 'pie',
           data: {
-            labels: labels,
+            labels: Object.keys(fieldCounts),
             datasets: [{
-              data: values,
-              backgroundColor: colors
+              data: Object.values(fieldCounts),
+              backgroundColor: Object.keys(fieldCounts).map(() => '#' + Math.floor(Math.random()*16777215).toString(16))
             }]
           },
           options: {
-            responsive: true,
             plugins: {
-              legend: {
-                position: 'right'
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    const label = context.label || '';
-                    const value = context.parsed;
-                    const total = values.reduce((a, b) => a + b, 0);
-                    const percent = ((value / total) * 100).toFixed(1);
-                    return `${label}: ${value} (${percent}%)`;
-                  }
-                }
-              }
+              legend: { position: 'right' }
+            }
+          }
+        });
+
+        const sortedOrgs = Object.entries(orgCounts).sort((a,b) => b[1] - a[1]).slice(0,10);
+        const orgChart = new Chart(document.getElementById("orgChart"), {
+          type: 'bar',
+          data: {
+            labels: sortedOrgs.map(e => e[0]),
+            datasets: [{
+              label: 'Alumni Count',
+              data: sortedOrgs.map(e => e[1]),
+              backgroundColor: '#3CBAC8'
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            scales: {
+              x: { beginAtZero: true }
+            }
+          }
+        });
+
+        // Static Gender Chart
+        new Chart(document.getElementById("genderChart"), {
+          type: 'doughnut',
+          data: {
+            labels: ["Women", "Men", "Non-Binary"],
+            datasets: [{
+              data: [65, 25, 10],
+              backgroundColor: ["#FFB6C1", "#87CEFA", "#DDA0DD"]
+            }]
+          },
+          options: {
+            plugins: {
+              legend: { position: 'right' }
+            }
+          }
+        });
+
+        // Static Race Chart
+        new Chart(document.getElementById("raceChart"), {
+          type: 'doughnut',
+          data: {
+            labels: ["Multi-racial", "Black/African-American", "Asian", "White/European Descent"],
+            datasets: [{
+              data: [33, 33, 14, 20],
+              backgroundColor: ["#FFDEAD", "#6B8E23", "#40E0D0", "#A9A9A9"]
+            }]
+          },
+          options: {
+            plugins: {
+              legend: { position: 'right' }
             }
           }
         });
