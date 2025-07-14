@@ -130,6 +130,8 @@
 
   <h2>NSA Alumni Directory</h2>
 
+  <h3 id="alumni-count">Total Alumni: Loading...</h3> 
+
 <div class="filters">
   <input type="text" id="searchBox" placeholder="Search by name, email, org..." />
   
@@ -242,6 +244,9 @@ const fieldMapping = {
         skipEmptyLines: true
       });
       alumniData = parsed.data;
+      
+const validAlumni = alumniData.filter(r => r["First Name"]); // or tweak based on spreadsheet
+document.getElementById("alumni-count").textContent = `Total Alumni: ${validAlumni.length}`;
 
       // Populate cohort dropdown
       const cohorts = [...new Set(alumniData.map(r => r["Cohort"]).filter(Boolean))].sort();
