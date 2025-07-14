@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NSA Alumni Impact</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: #f9fafa;
+      color: #14455C;
+    }
+
+    h2 {
+      color: #165C7D;
+      font-size: 28px;
+      border-bottom: 2px solid #3CBAC8;
+      padding-bottom: 5px;
+    }
+
+    #chart-container {
+      width: 80%;
+      margin: 40px auto;
+    }
+
+    canvas {
+      background: white;
+      border: 2px solid #D4DFE6;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>NSA Alumni by Issue Area</h2>
+  <div id="chart-container">
+    <canvas id="fieldChart" width="800" height="800"></canvas>
+  </div>
+
+  <script>
+    const fieldMapping = {
+      "Education": ["Education", "Education & Economic Development"],
+      "Youth Development": ["Youth Development", "Education & Youth Development"],
+      "Health": ["Health", "Healthcare", "Community Health", "Mental Health"],
+      "Health & Human Services": ["Health & Human Services"],
+      "Health & Legal Services": ["Health & Legal Services"],
+      "Housing": ["Housing", "Housing & Community Development", "Housing and Community Development"],
+      "Advocacy & Policy": ["Advocacy", "Public Policy & Advocacy", "Environmental Justice"],
+      "Arts & Culture": ["Arts", "Arts & Culture"],
+      "Community Development": ["Community", "Economic Development", "Economic & Community Development", "Family Support", "Leadership"],
+      "Workforce Development": ["Workforce Development", "Workforce & Economic Development"],
+      "Environment": ["Environment", "Environment & Conservation"],
+      "Faith-Based": ["Faith-Based", "Faith Based"],
+      "Philanthropy": ["Philanthropy", "Philanthropy & Capacity Building"],
+      "Consulting & Research": ["Consulting", "Nonprofit Consulting", "Research and Evaluation", "Research/Technology"],
+      "Government": ["Government"],
+      "Social Services": ["Human Services", "Social Services", "Community Recreation"],
+      "Veterans": ["Veteran Services"]
+    };
+
+    function getSimplifiedField(rawValue) {
+      const val = (rawValue || "").trim();
+      for (const [clean, rawList] of Object.entries(fieldMapping)) {
+        if (rawList.includes(val)) return clean;
+      }
+      return "Other";
+    }
+
+    fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
+      .then(response => response.text())
+      .then(csv => {
+        const parsed = Papa.parse(csv, {
+          header: true,
+          skipEmptyLines: true
+        });
+
+        const data = parsed.data;
+        const fieldCounts = {};
+
+        data.forEach(row => {
+          const field = getSimplifiedField(row["Field of NSA Host Organization"]);
+          if (!fieldCounts[field]) fieldCounts[field] = 0;
+          fieldCounts[field]++;
+        });
+
+        const labels = Object.keys(fieldCounts);
+        const values = Object.values(fieldCounts);
+
+        const colors = labels.map(() => '#' + Math.floor(Math.random()*16777215).toString(16));
+
+        const ctx = document.getElementById("fieldChart").getContext("2d");
+        new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: colors
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'right'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.parsed;
+                    const total = values.reduce((a, b) => a + b, 0);
+                    const percent = ((value / total) * 100).toFixed(1);
+                    return `${label}: ${value} (${percent}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+  </script>
+</body>
+</html>
