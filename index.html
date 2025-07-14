@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>NSA Alumni Directory</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input { width: 300px; padding: 10px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h2>NSA Alumni Directory</h2>
+  <input type="text" id="searchBox" placeholder="Search by name, cohort, organization..." />
+  <table>
+    <thead>
+      <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+        <th>Cohort</th>
+        <th>Organization</th>
+        <th>Field</th>
+      </tr>
+    </thead>
+    <tbody id="results"></tbody>
+  </table>
+
+  <script>
+    const searchBox = document.getElementById("searchBox");
+    const results = document.getElementById("results");
+    let alumniData = [];
+
+    function render(data) {
+      results.innerHTML = '';
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row["First Name"] || ""}</td>
+          <td>${row["Last Name"] || ""}</td>
+          <td>${row["Email"] || ""}</td>
+          <td>${row["Cohort"] || ""}</td>
+          <td>${row["Organization"] || ""}</td>
+          <td>${row["Field of NSA Host Organization"] || ""}</td>
+        `;
+        results.appendChild(tr);
+      });
+    }
+
+    function filter() {
+      const query = searchBox.value.toLowerCase();
+      const filtered = alumniData.filter(row =>
+        Object.values(row).some(val =>
+          (val || '').toLowerCase().includes(query)
+        )
+      );
+      render(filtered);
+    }
+
+    searchBox.addEventListener("input", filter);
+
+    fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
+      .then(response => response.text())
+      .then(text => {
+        const rows = text.trim().split('\n').map(r => r.split(','));
+        const headers = rows[0];
+        alumniData = rows.slice(1).map(row => {
+          const obj = {};
+          headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim() || "");
+          return obj;
+        });
+        render(alumniData);
+      })
+      .catch(error => {
+        console.error("Failed to fetch data:", error);
+        results.innerHTML = "<tr><td colspan='6'>Error loading data</td></tr>";
+      });
+  </script>
+</body>
+</html>
