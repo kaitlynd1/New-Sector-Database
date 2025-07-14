@@ -64,15 +64,22 @@
   </style>
 </head>
 <body>
-  <img src="nsalogo.jpeg" alt="New Sector Alliance Logo" style="height: 240px; width: auto; margin: 0 auto 20px; display: block;">
+  <img src="nsalogo.jpeg" alt="New Sector Alliance Logo" style="height: 240px; width: auto; margin: 0 auto 20px; display: block; border: 2px solid black;">
+
   <h2>NSA Alumni Directory</h2>
 
-  <div class="filters">
-    <input type="text" id="searchBox" placeholder="Search by name, email, org..." />
-    <select id="cohortFilter">
-      <option value="">All Cohorts</option>
-    </select>
-  </div>
+<div class="filters">
+  <input type="text" id="searchBox" placeholder="Search by name, email, org..." />
+  
+  <select id="cohortFilter">
+    <option value="">All Cohorts</option>
+  </select>
+
+  <select id="fieldFilter">
+    <option value="">All Fields</option>
+  </select>
+</div>
+
 
   <table>
     <thead>
