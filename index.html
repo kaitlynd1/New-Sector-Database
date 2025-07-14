@@ -95,64 +95,109 @@
     <tbody id="results"></tbody>
   </table>
 
-  <script>
-    const searchBox = document.getElementById("searchBox");
-    const cohortFilter = document.getElementById("cohortFilter");
-    const results = document.getElementById("results");
-    let alumniData = [];
+ <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+<script>
+  const searchBox = document.getElementById("searchBox");
+  const cohortFilter = document.getElementById("cohortFilter");
+  const fieldFilter = document.getElementById("fieldFilter");
+  const results = document.getElementById("results");
+  let alumniData = [];
 
-    function render(data) {
-      results.innerHTML = '';
-      data.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row["First Name"] || ""}</td>
-          <td>${row["Last Name"] || ""}</td>
-          <td>${row["Email"] || ""}</td>
-          <td>${row["Cohort"] || ""}</td>
-          <td>${row["Organization"] || ""}</td>
-          <td>${row["Field of NSA Host Organization"] || ""}</td>
-        `;
-        results.appendChild(tr);
-      });
+  // Manual mapping from messy CSV values to clean field categories
+  const fieldMapping = {
+    "Education": ["Education", "Education & Youth Development", "Education & Economic Development", "Youth Development"],
+    "Health": ["Health", "Healthcare", "Health & Human Services", "Health & Legal Services", "Mental Health", "Community Health"],
+    "Housing": ["Housing", "Housing & Community Development", "Housing and Community Development"],
+    "Advocacy & Policy": ["Advocacy", "Public Policy & Advocacy", "Environmental Justice"],
+    "Arts & Culture": ["Arts", "Arts & Culture"],
+    "Community Development": ["Community", "Economic Development", "Economic & Community Development", "Family Support", "Leadership", "Workforce Development", "Workforce & Economic Development"],
+    "Environment": ["Environment", "Environment & Conservation"],
+    "Faith-Based": ["Faith-Based", "Faith Based"],
+    "Philanthropy": ["Philanthropy", "Philanthropy & Capacity Building"],
+    "Consulting & Research": ["Consulting", "Nonprofit Consulting", "Research and Evaluation", "Research/Technology"],
+    "Government": ["Government"],
+    "Social Services": ["Human Services", "Social Services", "Community Recreation"],
+    "Veterans": ["Veteran Services"]
+  };
+
+  function getSimplifiedField(rawValue) {
+    const val = (rawValue || "").trim();
+    for (const [clean, rawList] of Object.entries(fieldMapping)) {
+      if (rawList.includes(val)) return clean;
     }
+    return "Other";
+  }
 
-    function filter() {
-      const query = searchBox.value.toLowerCase();
-      const cohort = cohortFilter.value;
-      const filtered = alumniData.filter(row => {
-        const matchesSearch = Object.values(row).some(val =>
-          (val || '').toLowerCase().includes(query)
-        );
-        const matchesCohort = !cohort || row["Cohort"] === cohort;
-        return matchesSearch && matchesCohort;
+  function render(data) {
+    results.innerHTML = '';
+    data.forEach(row => {
+      const simplifiedField = getSimplifiedField(row["Field of NSA Host Organization"]);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${row["First Name"] || ""}</td>
+        <td>${row["Last Name"] || ""}</td>
+        <td>${row["Email"] || ""}</td>
+        <td>${row["Cohort"] || ""}</td>
+        <td>${row["Organization"] || ""}</td>
+        <td>${simplifiedField}</td>
+      `;
+      results.appendChild(tr);
+    });
+  }
+
+  function filter() {
+    const query = searchBox.value.toLowerCase();
+    const selectedCohort = cohortFilter.value;
+    const selectedField = fieldFilter.value;
+
+    const filtered = alumniData.filter(row => {
+      const simplifiedField = getSimplifiedField(row["Field of NSA Host Organization"]);
+      const matchesSearch = Object.values(row).some(val =>
+        (val || '').toLowerCase().includes(query)
+      );
+      const matchesCohort = !selectedCohort || row["Cohort"] === selectedCohort;
+      const matchesField = !selectedField || simplifiedField === selectedField;
+
+      return matchesSearch && matchesCohort && matchesField;
+    });
+
+    render(filtered);
+  }
+
+  searchBox.addEventListener("input", filter);
+  cohortFilter.addEventListener("change", filter);
+  fieldFilter.addEventListener("change", filter);
+
+  fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
+    .then(response => response.text())
+    .then(csv => {
+      const parsed = Papa.parse(csv, {
+        header: true,
+        skipEmptyLines: true
       });
-      render(filtered);
-    }
+      alumniData = parsed.data;
 
-    searchBox.addEventListener("input", filter);
-    cohortFilter.addEventListener("change", filter);
-
-    fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
-      .then(response => response.text())
-      .then(csv => {
-        const parsed = Papa.parse(csv, {
-          header: true,
-          skipEmptyLines: true
-        });
-        alumniData = parsed.data;
-
-        // Populate cohort dropdown
-        const cohorts = [...new Set(alumniData.map(r => r["Cohort"]).filter(Boolean))].sort();
-        cohorts.forEach(cohort => {
-          const option = document.createElement("option");
-          option.value = cohort;
-          option.textContent = cohort;
-          cohortFilter.appendChild(option);
-        });
-
-        render(alumniData);
+      // Populate cohort dropdown
+      const cohorts = [...new Set(alumniData.map(r => r["Cohort"]).filter(Boolean))].sort();
+      cohorts.forEach(cohort => {
+        const option = document.createElement("option");
+        option.value = cohort;
+        option.textContent = cohort;
+        cohortFilter.appendChild(option);
       });
-  </script>
+
+      // Populate simplified field dropdown
+      const fields = [...new Set(alumniData.map(r => getSimplifiedField(r["Field of NSA Host Organization"])))].sort();
+      fields.forEach(field => {
+        const option = document.createElement("option");
+        option.value = field;
+        option.textContent = field;
+        fieldFilter.appendChild(option);
+      });
+
+      render(alumniData);
+    });
+</script>
+
 </body>
 </html>
