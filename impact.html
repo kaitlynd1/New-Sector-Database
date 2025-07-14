@@ -3,226 +3,193 @@
 <head>
   <meta charset="UTF-8">
   <title>NSA Alumni Impact</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js">
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
+      padding: 30px;
       background: #f9fafa;
       color: #14455C;
-      padding-top: 80px;
     }
 
-    .navbar {
-      background-color: #14455C;
-      padding: 15px 40px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    .navbar-brand {
-      color: white;
-      font-weight: bold;
-      letter-spacing: 0.5px;
-    }
-
-    .nav-link {
-      color: white !important;
-      margin-left: 30px;
-    }
-
-    .nav-link.active {
+    h2 {
+      color: #165C7D;
+      font-size: 28px;
       border-bottom: 2px solid #3CBAC8;
+      padding-bottom: 5px;
     }
 
-    .tab-content {
-      padding: 30px;
+    #chart-container {
+      width: 80%;
+      margin: 40px auto;
     }
 
     canvas {
-      max-width: 800px;
-      max-height: 600px;
-      margin: auto;
       background: white;
       border: 2px solid #D4DFE6;
       border-radius: 10px;
-      display: block;
     }
+   .navbar {
+  background-color: #14455C;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.navbar-logo {
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.navbar-links {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.navbar-links li {
+  margin-left: 30px;
+}
+
+.navbar-links a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  position: relative;
+  padding-bottom: 5px;
+}
+
+.navbar-links a::after {
+  content: "";
+  display: block;
+  width: 0%;
+  height: 2px;
+  background: #3CBAC8;
+  transition: width 0.3s;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.navbar-links a:hover::after {
+  width: 100%;
+}
+
   </style>
-</head>
 
-<body>
 
-<nav class="navbar fixed-top navbar-expand-lg">
-  <a class="navbar-brand" href="#">New Sector Alliance</a>
-  <div class="collapse navbar-collapse">
-    <ul class="navbar-nav ms-auto">
-      <li class="nav-item"><a class="nav-link" href="index.html">Alumni Directory</a></li>
-      <li class="nav-item"><a class="nav-link active" href="impact.html">Impact Dashboard</a></li>
-    </ul>
-  </div>
+ <nav class="navbar">
+  <div class="navbar-logo">New Sector Alliance</div>
+  <ul class="navbar-links">
+    <li><a href="index.html">Alumni Directory</a></li>
+    <li><a href="impact.html">Impact Dashboard</a></li>
+  </ul>
 </nav>
 
-<div class="container">
-  <ul class="nav nav-tabs" id="chartTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="field-tab" data-bs-toggle="tab" data-bs-target="#field" type="button" role="tab">By Issue Area</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="org-tab" data-bs-toggle="tab" data-bs-target="#org" type="button" role="tab">Top Host Orgs</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="gender-tab" data-bs-toggle="tab" data-bs-target="#gender" type="button" role="tab">Gender</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="race-tab" data-bs-toggle="tab" data-bs-target="#race" type="button" role="tab">Race/Ethnicity</button>
-    </li>
-  </ul>
 
-  <div class="tab-content">
-    <div class="tab-pane fade show active" id="field" role="tabpanel">
-      <canvas id="fieldChart"></canvas>
-    </div>
-    <div class="tab-pane fade" id="org" role="tabpanel">
-      <canvas id="orgChart"></canvas>
-    </div>
-    <div class="tab-pane fade" id="gender" role="tabpanel">
-      <canvas id="genderChart"></canvas>
-    </div>
-    <div class="tab-pane fade" id="race" role="tabpanel">
-      <canvas id="raceChart"></canvas>
-    </div>
+  
+</head>
+
+  
+<body>
+
+  <h2>NSA Alumni by Issue Area</h2>
+  <div id="chart-container">
+    <canvas id="fieldChart" width="800" height="800"></canvas>
   </div>
-</div>
 
-<script>
-  const fieldMapping = {
-    "Education": ["Education", "Education & Economic Development"],
-    "Youth Development": ["Youth Development", "Education & Youth Development"],
-    "Health": ["Health", "Healthcare", "Community Health", "Mental Health"],
-    "Health & Human Services": ["Health & Human Services"],
-    "Health & Legal Services": ["Health & Legal Services"],
-    "Housing": ["Housing", "Housing & Community Development", "Housing and Community Development"],
-    "Advocacy & Policy": ["Advocacy", "Public Policy & Advocacy", "Environmental Justice"],
-    "Arts & Culture": ["Arts", "Arts & Culture"],
-    "Community Development": ["Community", "Economic Development", "Economic & Community Development", "Family Support", "Leadership"],
-    "Workforce Development": ["Workforce Development", "Workforce & Economic Development"],
-    "Environment": ["Environment", "Environment & Conservation"],
-    "Faith-Based": ["Faith-Based", "Faith Based"],
-    "Philanthropy": ["Philanthropy", "Philanthropy & Capacity Building"],
-    "Consulting & Research": ["Consulting", "Nonprofit Consulting", "Research and Evaluation", "Research/Technology"],
-    "Government": ["Government"],
-    "Social Services": ["Human Services", "Social Services", "Community Recreation"],
-    "Veterans": ["Veteran Services"]
-  };
+  <h3 style="margin-top: 40px;">Top 10 Host Organizations by Alumni Count</h3>
+<canvas id="orgChart" width="400" height="300"></canvas>
+ 
+  <script>
+    const fieldMapping = {
+      "Education": ["Education", "Education & Economic Development"],
+      "Youth Development": ["Youth Development", "Education & Youth Development"],
+      "Health": ["Health", "Healthcare", "Community Health", "Mental Health"],
+      "Health & Human Services": ["Health & Human Services"],
+      "Health & Legal Services": ["Health & Legal Services"],
+      "Housing": ["Housing", "Housing & Community Development", "Housing and Community Development"],
+      "Advocacy & Policy": ["Advocacy", "Public Policy & Advocacy", "Environmental Justice"],
+      "Arts & Culture": ["Arts", "Arts & Culture"],
+      "Community Development": ["Community", "Economic Development", "Economic & Community Development", "Family Support", "Leadership"],
+      "Workforce Development": ["Workforce Development", "Workforce & Economic Development"],
+      "Environment": ["Environment", "Environment & Conservation"],
+      "Faith-Based": ["Faith-Based", "Faith Based"],
+      "Philanthropy": ["Philanthropy", "Philanthropy & Capacity Building"],
+      "Consulting & Research": ["Consulting", "Nonprofit Consulting", "Research and Evaluation", "Research/Technology"],
+      "Government": ["Government"],
+      "Social Services": ["Human Services", "Social Services", "Community Recreation"],
+      "Veterans": ["Veteran Services"]
+    };
 
-  function getSimplifiedField(rawValue) {
-    const val = (rawValue || "").trim();
-    for (const [clean, rawList] of Object.entries(fieldMapping)) {
-      if (rawList.includes(val)) return clean;
+    function getSimplifiedField(rawValue) {
+      const val = (rawValue || "").trim();
+      for (const [clean, rawList] of Object.entries(fieldMapping)) {
+        if (rawList.includes(val)) return clean;
+      }
+      return "Other";
     }
-    return "Other";
-  }
 
-  fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
-    .then(res => res.text())
-    .then(csv => {
-      const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true });
-      const data = parsed.data;
+    fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTYnpuoLkjxdiZlB218BEqdIZI-q2kHXyc7_Jp73mhMan9Usx8i0Q5lMjR79fWzm9Aogaz1NDgDhtFM/pub?gid=1555558299&single=true&output=csv")
+      .then(response => response.text())
+      .then(csv => {
+        const parsed = Papa.parse(csv, {
+          header: true,
+          skipEmptyLines: true
+        });
 
-      // ISSUE AREA
-      const fieldCounts = {};
-      const orgCounts = {};
+        const data = parsed.data;
+        const fieldCounts = {};
 
-      data.forEach(row => {
-        const field = getSimplifiedField(row["Field of NSA Host Organization"]);
-        fieldCounts[field] = (fieldCounts[field] || 0) + 1;
+        data.forEach(row => {
+          const field = getSimplifiedField(row["Field of NSA Host Organization"]);
+          if (!fieldCounts[field]) fieldCounts[field] = 0;
+          fieldCounts[field]++;
+        });
 
-        const org = row["Organization"];
-        if (org) orgCounts[org] = (orgCounts[org] || 0) + 1;
-      });
+        const labels = Object.keys(fieldCounts);
+        const values = Object.values(fieldCounts);
 
-      const fieldLabels = Object.keys(fieldCounts);
-      const fieldValues = Object.values(fieldCounts);
-      const fieldColors = fieldLabels.map(() => '#' + Math.floor(Math.random() * 16777215).toString(16));
+        const colors = labels.map(() => '#' + Math.floor(Math.random()*16777215).toString(16));
 
-      new Chart(document.getElementById("fieldChart"), {
-        type: "pie",
-        data: {
-          labels: fieldLabels,
-          datasets: [{
-            data: fieldValues,
-            backgroundColor: fieldColors
-          }]
-        },
-        options: {
-          plugins: {
-            legend: { position: "right" }
-          }
-        }
-      });
-
-      // TOP ORGS
-      const sortedOrgs = Object.entries(orgCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-      new Chart(document.getElementById("orgChart"), {
-        type: "bar",
-        data: {
-          labels: sortedOrgs.map(o => o[0]),
-          datasets: [{
-            label: "# of Alumni",
-            data: sortedOrgs.map(o => o[1]),
-            backgroundColor: "#3CBAC8"
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          plugins: {
-            legend: { display: false }
+        const ctx = document.getElementById("fieldChart").getContext("2d");
+        new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: colors
+            }]
           },
-          scales: {
-            x: { beginAtZero: true }
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'right'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.parsed;
+                    const total = values.reduce((a, b) => a + b, 0);
+                    const percent = ((value / total) * 100).toFixed(1);
+                    return `${label}: ${value} (${percent}%)`;
+                  }
+                }
+              }
+            }
           }
-        }
+        });
       });
-
-      // GENDER
-      new Chart(document.getElementById("genderChart"), {
-        type: "doughnut",
-        data: {
-          labels: ["Women", "Men", "Non-binary"],
-          datasets: [{
-            data: [65, 25, 10],
-            backgroundColor: ["#3CBAC8", "#14455C", "#AAC3A5"]
-          }]
-        },
-        options: {
-          plugins: {
-            legend: { position: "right" }
-          }
-        }
-      });
-
-      // RACE/ETHNICITY
-      new Chart(document.getElementById("raceChart"), {
-        type: "doughnut",
-        data: {
-          labels: ["Multi-racial", "Black or African-American", "Asian", "White / European Descent"],
-          datasets: [{
-            data: [33, 33, 14, 20],
-            backgroundColor: ["#14455C", "#3CBAC8", "#AAC3A5", "#E0E0E0"]
-          }]
-        },
-        options: {
-          plugins: {
-            legend: { position: "right" }
-          }
-        }
-      });
-    });
-</script>
-
+  </script>
 </body>
 </html>
