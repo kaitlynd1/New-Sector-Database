@@ -245,7 +245,29 @@
         const labels = Object.keys(fieldCounts);
         const values = Object.values(fieldCounts);
 
-        const colors = labels.map(() => '#' + Math.floor(Math.random()*16777215).toString(16));
+        const fieldColorMap = {
+  "Education": "#1f77b4",
+  "Youth Development": "#ff7f0e",
+  "Health": "#2ca02c",
+  "Health & Human Services": "#d62728",
+  "Health & Legal Services": "#9467bd",
+  "Housing": "#8c564b",
+  "Advocacy & Policy": "#e377c2",
+  "Arts & Culture": "#7f7f7f",
+  "Community Development": "#bcbd22",
+  "Workforce Development": "#17becf",
+  "Environment": "#aec7e8",
+  "Faith-Based": "#f7b6d2",
+  "Philanthropy": "#c5b0d5",
+  "Consulting & Research": "#ffbb78",
+  "Government": "#98df8a",
+  "Social Services": "#ff9896",
+  "Veterans": "#c49c94",
+  "Other": "#c7c7c7"
+};
+
+const colors = labels.map(label => fieldColorMap[label] || "#999999");
+
 
         const ctx = document.getElementById("fieldChart").getContext("2d");
         new Chart(ctx, {
